@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<title>Prijava sa potpisom</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 400px; margin: auto; }
+  input, button { width: 100%; padding: 8px; margin: 6px 0; font-size: 14px; }
+  canvas { border: 1px solid #ccc; width: 100%; height: 150px; }
+  #clear { background-color: #ccc; }
+  #submitBtn { background-color: #4CAF50; color: white; border: none; }
+</style>
+</head>
+<body>
+
+<h2>Prijava</h2>
+<form id="myForm">
+  <input type="text" name="ime" placeholder="Ime" required>
+  <input type="text" name="prezime" placeholder="Prezime" required>
+  <input type="tel" name="telefon" placeholder="Telefon" required>
+  <input type="email" name="email" placeholder="Email" required>
+
+  <p>Potpis:</p>
+  <canvas id="signature-pad"></canvas>
+  <button type="button" id="clear">Obriši potpis</button>
+
+  <button type="submit" id="submitBtn">Pošalji</button>
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
+  const canvas = document.getElementById('signature-pad');
+
+  function resizeCanvas() {
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    canvas.getContext("2d").scale(ratio, ratio);
+  }
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  const signaturePad = new SignaturePad(canvas);
+  document.getElementById('clear').addEventListener('click', () => signaturePad.clear());
+
+  const form = document.getElementById('myForm');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+
+    if (signaturePad.isEmpty()) {
+      alert("Molimo vas dodajte potpis.");
+      return;
+    }
+
+    const data = {
+      ime: form.ime.value,
+      prezime: form.prezime.value,
+      telefon: form.telefon.value,
+      email: form.email.value,
+      potpis: signaturePad.toDataURL()
+    };
+
+    fetch("SCRIPT_URL", { // Zamenite sa svojim Google Apps Script URL-om
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(data)
+    })
+    .then(() => {
+      alert("Podaci poslati!");
+      form.reset();
+      signaturePad.clear();
+    })
+    .catch(err => console.error(err));
+  });
+</script>
+
+</body>
+</html>
